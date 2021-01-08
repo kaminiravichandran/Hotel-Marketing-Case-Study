@@ -1,0 +1,104 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(plotly)
+library(xts)
+```
+
+```{r}
+hotel_df <- read_csv('C:/Users/Kamini/Desktop/Case_Study.csv')
+hotel_df$Date <- as.Date(hotel_df$Date, format = '%d/%m/%Y')
+hotel_df$Geographic_Region <- as.factor(hotel_df$Geographic_Region)
+hotel_df$Platform <- as.factor(hotel_df$Platform)
+hotel_df$Marketing_Channel <- as.factor(hotel_df$Marketing_Channel)
+```
+
+```{r}
+summary(hotel_df)
+```
+
+```{r}
+head(hotel_df)
+```
+
+```{r}
+hotel_df %>%
+  group_by(Geographic_Region) %>%
+  summarise(sum_room_nights = sum(Net_Room_Nights)) %>%
+  plot_ly(type = 'pie', labels = ~Geographic_Region, values = ~sum_room_nights, 
+          textposition = 'inside', textinfo = 'label+percent') %>%
+  layout(title = 'Total number of rooms booked across the 4 geograhical regions',
+         showlegend = FALSE)
+```
+
+```{r}
+hotel_df %>%
+  mutate(Yearmon = as.yearmon(Date)) %>%
+  group_by(Geographic_Region, Yearmon) %>%
+  summarise(sum_room = sum(Net_Room_Nights)) %>%
+  ungroup() %>%
+  plot_ly(x = ~Yearmon, type = 'scatter', mode = 'lines', y = ~sum_room, color = ~Geographic_Region) %>%
+  layout(title = 'Total number of rooms booked across the 4 geographic regions',
+         yaxis = list(title = 'Total number of rooms booked'),
+         legend = list(orientation = 'h', xanchor = 'center', x = 0.5, y = -0.2))
+```
+
+```{r}
+hotel_df %>%
+  group_by(Marketing_Channel) %>%
+  summarise(sum_room_nights = sum(Net_Room_Nights)) %>%
+  plot_ly(type = 'pie', labels = ~Marketing_Channel, values = ~sum_room_nights, 
+          textposition = 'inside', textinfo = 'label+percent') %>%
+  layout(title = 'Net booked rooms across the 4 Geographic Regions',
+         showlegend = FALSE)
+```
+
+```{r}
+hotel_df %>%
+  mutate(Yearmon = as.yearmon(Date)) %>%
+  filter(Platform == 'Desktop' & Marketing_Channel != 'Channel 11') %>%
+  group_by(Marketing_Channel, Yearmon) %>%
+  summarise(sum_room = sum(Net_Room_Nights)) %>%
+  ungroup() %>%
+  plot_ly(x = ~Yearmon, type = 'scatter', mode = 'lines', y = ~sum_room, color = ~Marketing_Channel) %>%
+  layout(title = 'Total number of rooms booked across the 10 marketing channels using desktop website',
+         yaxis = list(title = 'Total number of rooms booked', type = 'log'),
+         legend = list(orientation = 'h', xanchor = 'center', x = 0.5, y = -0.2))
+```
+
+```{r}
+hotel_df %>%
+  mutate(Yearmon = as.yearmon(Date)) %>%
+  filter(Platform == 'Mobile' & Marketing_Channel != 'Channel 11') %>%
+  group_by(Marketing_Channel, Yearmon) %>%
+  summarise(sum_room = sum(Net_Room_Nights)) %>%
+  ungroup() %>%
+  plot_ly(x = ~Yearmon, type = 'scatter', mode = 'lines', y = ~sum_room, color = ~Marketing_Channel) %>%
+  layout(title = 'Total number of rooms booked across the 10 marketing platforms using mobile website',
+         yaxis = list(title = 'Total number of rooms booked', type = 'log'),
+         legend = list(orientation = 'h', xanchor = 'center', x = 0.5, y = -0.2))
+```
+
+```{r}
+hotel_df %>%
+  mutate(Conversion = Net_Room_Nights/Visits  * 100) %>%
+  filter(Marketing_Channel != 'Channel 11') %>%
+  group_by(Geographic_Region) %>%
+  summarise(Mean_conversion = mean(Conversion))
+```
+
+```{r}
+hotel_df %>%
+  mutate(Conversion = Net_Room_Nights/Visits  * 100) %>%
+  filter(Marketing_Channel != 'Channel 11') %>%
+  group_by(Marketing_Channel) %>%
+  summarise(Mean_conversion = mean(Conversion))
+```
